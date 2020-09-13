@@ -16,7 +16,7 @@ func main()  {
 	lines := string(b)
 	projectID := os.Args[1]
 	yaml := strings.Replace(lines, "##PROJECT_ID", projectID, 1)
-	err = ioutil.WriteFile("./app.yaml", []byte(yaml), 0666)
+	err = ioutil.WriteFile("./app.deploy.yaml", []byte(yaml), 0666)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
