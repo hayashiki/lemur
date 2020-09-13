@@ -8,7 +8,7 @@ import (
 )
 
 func main()  {
-	b, err := ioutil.ReadFile("./app.yaml")
+	b, err := ioutil.ReadFile("./app.deploy.yaml")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
