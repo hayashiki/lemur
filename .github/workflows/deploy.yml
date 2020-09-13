@@ -31,17 +31,14 @@ jobs:
         run: go run cmd/deploy/env.go ${{ secrets.PROJECT_ID }}
 
       - name: Initialize Google Cloud SDK
-        uses: zxyle/publish-gae-action@master
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
-          service_account_email: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL }}
-          service_account_key: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
           project_id: ${{ secrets.PROJECT_ID }}
+          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
 
       - name: Installing add on for golang
         run: sudo apt-get install google-cloud-sdk-app-engine-go
 
       - name: Publish app to Google App Engine
         run: |
-          gcloud auth activate-service-account ${{ secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL }} --key-file=client-secret.json
-          gcloud config set project ${{ secrets.PROJECT_ID }}
-          gcloud -q app deploy app.yaml --promote
+          gcloud app deploy app.yaml --project=${{ secrets.PROJECT_ID }} --version=v${GITHUB_RUN_NUMBER} -q
