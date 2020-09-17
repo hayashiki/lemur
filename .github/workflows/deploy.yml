@@ -1,4 +1,4 @@
-name: Deploy to production
+name: Deploy to GAE/Go
 
 on:
   push:
@@ -6,9 +6,8 @@ on:
       - master # runs on each push to master
 
 jobs:
-
   build:
-    name: Build
+    name: deploy
     runs-on: ubuntu-latest
     steps:
 
