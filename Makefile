@@ -11,6 +11,11 @@ test:
 deploy:
 	gcloud app deploy -q
 
+.PHONY: deploy
+deploy-tasks:
+	gcloud app deploy queue.yaml
+
+
 .PHONY: show-version
 show-version: $(GOBIN)/gobump
 	@gobump show -r .
