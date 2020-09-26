@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func main()  {
+func main() {
 	b, err := ioutil.ReadFile("./app.deploy.yaml")
 	if err != nil {
 		fmt.Println(err)

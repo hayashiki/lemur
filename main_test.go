@@ -23,7 +23,6 @@ func Test_healthCheckHandler(t *testing.T) {
 		t.Errorf("response code: got %v, want %v", got, want)
 	}
 
-
 	if got := rr.Body.String(); got != "ok" {
 		t.Errorf("response code: got %v, want %v", got, want)
 	}
