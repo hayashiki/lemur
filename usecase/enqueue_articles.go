@@ -87,7 +87,7 @@ func (uc *enqueueArticle) getAsync(attachments []*entity.Attachment) ([]*github.
 }
 
 func (uc *enqueueArticle) get(id, name string) (*github.File, error) {
-	imgBytes, err := uc.docBaseSvc.Download(id)
+	fileBytes, err := uc.docBaseSvc.Download(id)
 	if err != nil {
 		log.Printf("GetMultiAsync err: %w", err)
 		return nil, err
@@ -95,7 +95,7 @@ func (uc *enqueueArticle) get(id, name string) (*github.File, error) {
 	file := &github.File{
 		Path:    "attachments/",
 		Name:    name,
-		Content: imgBytes,
+		Content: fileBytes,
 	}
 
 	return file, nil

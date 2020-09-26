@@ -63,8 +63,9 @@ type GitCommit struct {
 
 func NewGitCommit(files []*File, message string) *GitCommit {
 	return &GitCommit{
+		// TODO: set config
 		CommitAuthorName:  "hayashiki",
-		CommitAuthorEmail: "masayuki@hayashida.dev",
+		CommitAuthorEmail: os.Getenv("EMAIL"),
 		Files:             files,
 		Branch: strconv.FormatInt(time.Now().UnixNano(), 10),
 		CommitMessage:      message,

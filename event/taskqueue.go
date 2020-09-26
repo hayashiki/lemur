@@ -29,23 +29,14 @@ type taskQueue struct {
 func (t *taskQueue) CreateTask(task Task) error {
 	ctx := context.Background()
 
-	//headers := map[string]string{
-	//	"Content-Type":  "application/json",
-	//	"Authorization": c.authToken,
-	//}
-
 	body, err := json.Marshal(task.Object)
 	if err != nil {
 		return err
 	}
 
 	aeReq := &taskspb.AppEngineHttpRequest{
-		//AppEngineRouting: &taskspb.AppEngineRouting{
-		//	Service: "serviceID",
-		//},
 		HttpMethod:  taskspb.HttpMethod_POST,
 		RelativeUri: task.Path,
-		//Headers:     headers,
 		Body: body,
 	}
 
