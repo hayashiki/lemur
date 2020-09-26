@@ -8,6 +8,7 @@ import (
 	"github.com/hayashiki/lemur/entity"
 	"github.com/hayashiki/lemur/event"
 	"github.com/hayashiki/lemur/event/eventtask"
+	"github.com/hayashiki/lemur/github"
 	"github.com/hayashiki/lemur/infra"
 	"github.com/hayashiki/lemur/logger"
 	"github.com/hayashiki/lemur/usecase"
@@ -17,9 +18,10 @@ import (
 
 type server struct {
 	logger      logger.Logger
-	docBase     docbase.DocBaser
+	docBaseSvc  docbase.Client
 	taskQueue   event.TaskQueue
 	articleRepo entity.ArticleRepository
+	githubSvc   github.Client
 }
 
 func (s *server) Router() http.Handler {
@@ -45,23 +47,24 @@ type Server interface {
 func NewServer(c *config.Config) Server {
 	return &server{
 		logger:      logger.NewLogger(),
-		docBase:     docbase.NewClient(infra.DocBaseClient(c.DocBaseTeam, c.DocBaseToken)),
+		docBaseSvc:  docbase.NewClient(infra.DocBaseClient(c.DocBaseTeam, c.DocBaseToken)),
 		taskQueue:   event.NewTasksClient(c.GCPProjectID, c.GCPLocationID),
 		articleRepo: entity.NewArticleRepository(infra.GetDSClient(c.GCPProjectID)),
+		githubSvc:   github.NewClient("hayashiki", "mkdocbase", "GITHUB_SECRET_TOKEN", "hayashiki"),
 	}
 }
 
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, "ok")
 }
 
-func (s *server) cronFetchDocBase(w http.ResponseWriter, r *http.Request) {
+func (s *server) cronFetchDocBase(w http.ResponseWriter, _ *http.Request) {
 	article := usecase.NewArticles(
 		s.logger,
-		s.docBase,
+		s.docBaseSvc,
 		s.taskQueue,
 		s.articleRepo,
-		)
+	)
 
 	if err := article.Do(); err != nil {
 		// curryの参考にちゃんとする
@@ -86,13 +89,14 @@ func (s *server) enqueueArticles(w http.ResponseWriter, r *http.Request) {
 
 	enqueueArticle := usecase.NewEnqueueArticle(
 		s.logger,
-		s.docBase,
+		s.docBaseSvc,
 		s.articleRepo,
+		s.githubSvc,
 	)
 
 	log.Printf("article %+v", article)
 
-	// docBase
+	// docBaseSvc
 	taskName := r.Header.Get("X-Appengine-Taskname")
 
 	if taskName != eventtask.TaskName {

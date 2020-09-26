@@ -57,4 +57,3 @@ func (logger logger) log(severity int, args ...interface{}) {
 	}
 	fmt.Println(string(b))
 }
-

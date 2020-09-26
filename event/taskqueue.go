@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
-	"log"
 	"net/http"
 )
 
@@ -40,9 +39,6 @@ func (t *taskQueue) CreateTask(task Task) error {
 		return err
 	}
 
-	log.Printf("task.Path: %v", string(task.Path))
-	log.Printf("ReadAll: %v", string(body))
-
 	aeReq := &taskspb.AppEngineHttpRequest{
 		//AppEngineRouting: &taskspb.AppEngineRouting{
 		//	Service: "serviceID",
@@ -72,13 +68,6 @@ func ParseTask(r *http.Request, o interface{}) error {
 
 func NewTasksClient(projectID, locationID string) TaskQueue {
 	ctx := context.Background()
-
-	//gOpt := option.WithGRPCDialOption(grpc.WithKeepaliveParams(keepalive.ClientParameters{
-	//	Time:                1 * time.Second,
-	//	Timeout:             5 * time.Second,
-	//	PermitWithoutStream: true,
-	//}))
-
 	cli, err := cloudtasks.NewClient(ctx)
 
 	if err != nil {

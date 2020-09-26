@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	keyPort         = "PORT"
-	keyGCPProjectID = "PROJECT_ID"
+	keyPort          = "PORT"
+	keyGCPProjectID  = "PROJECT_ID"
 	keyGCPLocationID = "LOCATION_ID"
-	keyDocBaseTeam = "DOCBASE_TEAM"
-	keyDocBaseToken = "DOCBASE_TOKEN"
+	keyDocBaseTeam   = "DOCBASE_TEAM"
+	keyDocBaseToken  = "DOCBASE_TOKEN"
 )
 
 func NewReadMustFromEnv() (*Config, error) {
@@ -46,11 +46,11 @@ func NewReadMustFromEnv() (*Config, error) {
 }
 
 type Config struct {
-	Port         string
-	GCPProjectID string
+	Port          string
+	GCPProjectID  string
 	GCPLocationID string
-	DocBaseTeam  string
-	DocBaseToken string
+	DocBaseTeam   string
+	DocBaseToken  string
 }
 
 func getEnvs(names ...string) map[string]string {

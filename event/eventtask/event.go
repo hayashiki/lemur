@@ -6,12 +6,12 @@ import (
 )
 
 var TaskName = "docBase"
-
+var TaskPath = "/enqueue/articles"
 
 func NewEnqueueArticle(v *entity.Article) event.Task {
 	return event.Task{
 		Queue:  TaskName,
-		Path:   "/enqueue/articles",
+		Path:   TaskPath,
 		Object: v,
 	}
 }

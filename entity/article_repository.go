@@ -11,7 +11,7 @@ type repository struct {
 	dsClient *datastore.Client
 }
 
-//go:generate mockgen -source article.go -destination mock_article/mock_repo.go
+//go:generate mockgen -source article_repository.go -destination mock_article/mock_article_repository.go
 type ArticleRepository interface {
 	Get(id int64) (*Article, error)
 	Put(*Article) (int64, error)
@@ -23,8 +23,8 @@ func NewArticleRepository(dsClient *datastore.Client) ArticleRepository {
 	return &repository{ctx, dsClient}
 }
 
-func (r *repository) key(id string) *datastore.Key {
-	return datastore.NameKey(ArticleKind, id, nil)
+func (r *repository) key(id int64) *datastore.Key {
+	return datastore.IDKey(ArticleKind, id, nil)
 }
 
 func (r *repository) Get(id int64) (*Article, error) {
@@ -35,7 +35,7 @@ func (r *repository) Get(id int64) (*Article, error) {
 }
 
 func (r *repository) Put(a *Article) (int64, error) {
-	key := datastore.IDKey(ArticleKind, a.Number, nil)
+	key := datastore.IDKey(ArticleKind, a.ID, nil)
 	_, err := r.dsClient.Put(r.ctx, key, a)
 	if err != nil {
 		return int64(0), err

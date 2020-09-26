@@ -1,17 +1,19 @@
 package usecase
 
 import (
+	"fmt"
 	"github.com/hayashiki/lemur/docbase"
 	"github.com/hayashiki/lemur/entity"
 	"github.com/hayashiki/lemur/event"
 	"github.com/hayashiki/lemur/event/eventtask"
 	"github.com/hayashiki/lemur/logger"
 	"log"
+	"time"
 )
 
 type Articles struct {
 	log       logger.Logger
-	docBase   docbase.DocBaser
+	docBase   docbase.Client
 	taskQueue event.TaskQueue
 	repo      entity.ArticleRepository
 }
@@ -22,10 +24,10 @@ type EnqueueArticlesInputParams struct {
 
 func NewArticles(
 	log logger.Logger,
-	docBase docbase.DocBaser,
+	docBase docbase.Client,
 	taskQueue event.TaskQueue,
 	repo entity.ArticleRepository,
-	) *Articles {
+) *Articles {
 	return &Articles{
 		log,
 		docBase,
@@ -36,8 +38,7 @@ func NewArticles(
 
 func (a *Articles) Do() error {
 
-	// 昨日の日付を引数にしたい
-	posts, err := a.docBase.PostList()
+	posts, err := a.docBase.PostList(createQuery())
 
 	if err != nil {
 		return err
@@ -47,16 +48,15 @@ func (a *Articles) Do() error {
 		return nil
 	}
 
-	//var tasks []event.Task
 	for _, p := range posts {
 
-		var images []*entity.Image
+		var attachments []*entity.Attachment
 		for _, at := range p.Attachments {
-			img := entity.NewImage(at.ID, at.Name, at.URL)
-			images = append(images, img)
+			img := entity.NewAttachment(at.ID, at.Name, at.URL)
+			attachments = append(attachments, img)
 		}
 
-		article := entity.NewArticle(int64(p.ID), p.Title, p.Body, p.CreatedAt, images)
+		article := entity.NewArticle(int64(p.ID), p.Title, p.Body, p.CreatedAt, attachments)
 		// TODO PutMultiにする
 		_, err := a.repo.Put(article)
 
@@ -73,4 +73,9 @@ func (a *Articles) Do() error {
 	}
 
 	return nil
+}
+
+func createQuery() string {
+	strTime := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+	return fmt.Sprintf("changed_at: %s", strTime)
 }

@@ -5,19 +5,19 @@ import "time"
 const ArticleKind = "Article"
 
 type Article struct {
-	ID        int64
-	UserId    int64
-	Title     string
-	Number    int64
-	Message   string
-	Url       string
-	MdGcsPath string
-	ImageURLs []*Image
-	MDBody    string `datastore:",noindex"`
-	CreatedAt time.Time
+	ID          int64
+	UserId      int64
+	Title       string
+	Number      int64
+	Message     string
+	Url         string
+	MdGcsPath   string
+	Attachments []*Attachment
+	MDBody      string `datastore:",noindex"`
+	CreatedAt   time.Time
 }
 
-type Image struct {
+type Attachment struct {
 	ID        string
 	Name      string
 	Content   []byte
@@ -25,18 +25,18 @@ type Image struct {
 	URL       string
 }
 
-func NewArticle(id int64, title, body string, createdAt time.Time, images []*Image) *Article {
+func NewArticle(id int64, title, body string, createdAt time.Time, attachments []*Attachment) *Article {
 	return &Article{
-		ID:        id,
-		Title:     title,
-		MDBody:    body,
-		CreatedAt: createdAt,
-		ImageURLs: images,
+		ID:          id,
+		Title:       title,
+		MDBody:      body,
+		CreatedAt:   createdAt,
+		Attachments: attachments,
 	}
 }
 
-func NewImage(id, name string, url string) *Image {
-	return &Image{
+func NewAttachment(id, name string, url string) *Attachment {
+	return &Attachment{
 		ID:   id,
 		Name: name,
 		URL:  url,
