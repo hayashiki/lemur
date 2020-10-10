@@ -6,15 +6,17 @@ const ArticleKind = "Article"
 
 type Article struct {
 	ID          int64
-	UserId      int64
-	Title       string
+	UserId      int64  `datastore:"user_id"`
+	Title       string `datastore:"title"`
 	Number      int64
 	Message     string
+	Category    string
 	Url         string
 	MdGcsPath   string
 	Attachments []*Attachment
 	MDBody      string `datastore:",noindex"`
 	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type Attachment struct {

@@ -9,11 +9,24 @@ test:
 
 .PHONY: deploy
 deploy:
-	gcloud app deploy -q
+	@gcloud app deploy -q
 
-.PHONY: deploy
+.PHONY: deploy-tasks
 deploy-tasks:
-	gcloud app deploy queue.yaml
+	@gcloud app deploy queue.yaml
+
+.PHONY: deploy-scheduler
+deploy-scheduler:
+	@gcloud scheduler jobs create app-engine crowl-articles \
+		--project lemurapp \
+		--schedule "* 2 * * *" \
+		--description "crow article" \
+		--service "default" \
+		--relative-url "/cron/docbase" \
+		--http-method "GET" \
+		--headers "Authorization=secrets" \
+		--time-zone "Asia/Tokyo" \
+		--attempt-deadline "60s"
 
 
 .PHONY: show-version

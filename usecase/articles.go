@@ -45,6 +45,7 @@ func (a *Articles) Do() error {
 	}
 
 	if len(posts) == 0 {
+		// TODO: 対象ナシにメッセージする
 		return nil
 	}
 

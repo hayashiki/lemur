@@ -37,7 +37,7 @@ func (t *taskQueue) CreateTask(task Task) error {
 	aeReq := &taskspb.AppEngineHttpRequest{
 		HttpMethod:  taskspb.HttpMethod_POST,
 		RelativeUri: task.Path,
-		Body: body,
+		Body:        body,
 	}
 
 	req := &taskspb.CreateTaskRequest{
