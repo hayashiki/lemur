@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 	"github.com/hayashiki/lemur/docbase"
+	"github.com/hayashiki/lemur/elasticsearch"
 	"github.com/hayashiki/lemur/entity"
 	"github.com/hayashiki/lemur/github"
 	"github.com/hayashiki/lemur/logger"
@@ -16,6 +17,7 @@ type enqueueArticle struct {
 	docBaseSvc docbase.Client
 	repo       entity.ArticleRepository
 	githubSvc  github.Client
+	esRepo     elasticsearch.Repository
 }
 
 func NewEnqueueArticle(
@@ -23,21 +25,29 @@ func NewEnqueueArticle(
 	docBase docbase.Client,
 	repo entity.ArticleRepository,
 	githubSvc github.Client,
+	esRepo elasticsearch.Repository,
 ) *enqueueArticle {
 	return &enqueueArticle{
 		log,
 		docBase,
 		repo,
 		githubSvc,
+		esRepo,
 	}
 }
 
 func (uc *enqueueArticle) Do(params EnqueueArticlesInputParams) error {
-	uc.log.Debug("enqueueArticle.Do called")
+	uc.log.Debug("enqueueArticle.Do start")
 
 	files, err := uc.getAsync(params.Article.Attachments)
 
 	if err != nil {
+		uc.log.Error("articleDocument.getAcync ")
+		return err
+	}
+
+	if err := uc.esRepo.SaveArticleDocument(&params.Article); err != nil {
+		uc.log.Error(fmt.Sprintf("SaveArticleDocument %v", err))
 		return err
 	}
 
@@ -47,15 +57,20 @@ func (uc *enqueueArticle) Do(params EnqueueArticlesInputParams) error {
 		Content: []byte(params.Article.MDBody),
 	})
 
-	message   := fmt.Sprintf("Add %s", params.Article.Title)
+	message := fmt.Sprintf("Add %s", params.Article.Title)
 	gitSvc := github.NewGitCommit(files, message)
 	if err := uc.githubSvc.PushNewFileToBranch(gitSvc); err != nil {
+		uc.log.Error(fmt.Sprintf("PushNewFileToBranch %v", err))
 		return err
 	}
 
 	if err := uc.githubSvc.CreateNewPullRequest(gitSvc); err != nil {
+		uc.log.Error(fmt.Sprintf("CreateNewPullRequest %v", err))
 		return err
 	}
+	uc.log.Debug("enqueueArticle.Do end")
+
+	// write log table
 
 	return nil
 }

@@ -48,7 +48,6 @@ func (f File) FullPath() string {
 	return f.Path + f.Name
 }
 
-
 type GitCommit struct {
 	CommitAuthorName   string
 	CommitAuthorEmail  string
@@ -64,10 +63,10 @@ type GitCommit struct {
 func NewGitCommit(files []*File, message string) *GitCommit {
 	return &GitCommit{
 		// TODO: set config
-		CommitAuthorName:  "hayashiki",
-		CommitAuthorEmail: os.Getenv("EMAIL"),
-		Files:             files,
-		Branch: strconv.FormatInt(time.Now().UnixNano(), 10),
+		CommitAuthorName:   "hayashiki",
+		CommitAuthorEmail:  os.Getenv("EMAIL"),
+		Files:              files,
+		Branch:             strconv.FormatInt(time.Now().UnixNano(), 10),
 		CommitMessage:      message,
 		PullRequestMessage: message,
 		PullRequestTitle:   message,
@@ -190,16 +189,17 @@ func (c *client) CreateNewPullRequest(commit *GitCommit) error {
 		return err
 	}
 
-	o := &github.PullRequestOptions{
-		SHA:         pr.GetHead().GetSHA(),
-		MergeMethod: "rebase",
-	}
-
-	_, _, err = c.gCli.PullRequests.Merge(context.Background(), c.Organization, c.Repo, pr.GetNumber(), "Mereged!", o)
-
-	if err != nil {
-		return err
-	}
+	// TODO 同時タイミングでPRをおくるとエラーになるのでブランチプッシュだけにしておく
+	//o := &github.PullRequestOptions{
+	//	SHA:         pr.GetHead().GetSHA(),
+	//	MergeMethod: "rebase",
+	//}
+	//
+	//_, _, err = c.gCli.PullRequests.Merge(context.Background(), c.Organization, c.Repo, pr.GetNumber(), "Mereged!", o)
+	//
+	//if err != nil {
+	//	return err
+	//}
 
 	log.Printf("PR created: %s\n", pr.GetHTMLURL())
 	return nil

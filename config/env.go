@@ -1,62 +1,24 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
+import "github.com/kelseyhightower/envconfig"
 
-var (
-	keyPort          = "PORT"
-	keyGCPProjectID  = "PROJECT_ID"
-	keyGCPLocationID = "LOCATION_ID"
-	keyDocBaseTeam   = "DOCBASE_TEAM"
-	keyDocBaseToken  = "DOCBASE_TOKEN"
-)
+type Config struct {
+	Port          string `envconfig:"PORT" default:"8080"`
+	GCPProjectID  string `envconfig:"PROJECT_ID" require:"true"`
+	GCPLocationID string `envconfig:"LOCATION_ID" require:"true"`
+	DocBaseTeam   string `envconfig:"DOCBASE_TEAM" require:"true"`
+	DocBaseToken  string `envconfig:"DOCBASE_TOKEN" require:"true"`
+	GithubSecret  string `envconfig:"GITHUB_SECRET" require:"true"`
+	GithubOrg     string `envconfig:"GITHUB_ORG" require:"true"`
+	GithubRepo    string `envconfig:"GITHUB_REPO" require:"true"`
+}
 
 func NewReadMustFromEnv() (*Config, error) {
 	cfg := &Config{}
-	envs := getEnvs(keyPort, keyGCPProjectID, keyGCPLocationID, keyDocBaseTeam, keyDocBaseToken)
 
-	cfg.Port = envs[keyPort]
-	if cfg.Port == "" {
-		cfg.Port = "8000"
-	}
-
-	cfg.GCPProjectID = envs[keyGCPProjectID]
-	if cfg.GCPProjectID == "" {
-		return nil, fmt.Errorf("PROJECT_ID environment must be defined")
-	}
-
-	cfg.GCPLocationID = envs[keyGCPLocationID]
-	if cfg.GCPLocationID == "" {
-		return nil, fmt.Errorf("LOCATION_ID environment must be defined")
-	}
-
-	cfg.DocBaseTeam = envs[keyDocBaseTeam]
-	if cfg.DocBaseTeam == "" {
-		return nil, fmt.Errorf("DOCBASE_TEAM environment must be defined")
-	}
-
-	cfg.DocBaseToken = envs[keyDocBaseToken]
-	if cfg.DocBaseToken == "" {
-		return nil, fmt.Errorf("DOCBASE_TOKEN environment must be defined")
+	if err := envconfig.Process("", &cfg); err != nil {
+		return nil, err
 	}
 
 	return cfg, nil
-}
-
-type Config struct {
-	Port          string
-	GCPProjectID  string
-	GCPLocationID string
-	DocBaseTeam   string
-	DocBaseToken  string
-}
-
-func getEnvs(names ...string) map[string]string {
-	envs := map[string]string{}
-	for _, name := range names {
-		envs[name] = os.Getenv(name)
-	}
-	return envs
 }

@@ -3,6 +3,7 @@ package usecase_test
 import (
 	"github.com/golang/mock/gomock"
 	mock_docbase "github.com/hayashiki/lemur/docbase/mock"
+	mock_elasticsearch "github.com/hayashiki/lemur/elasticsearch/mock"
 	"github.com/hayashiki/lemur/entity"
 	mock_entity "github.com/hayashiki/lemur/entity/mock_article"
 	mock_github "github.com/hayashiki/lemur/github/mock"
@@ -37,8 +38,8 @@ func TestEnqueueArticleWithMock_Do(t *testing.T) {
 	defer ctrl.Finish()
 
 	dcbCli := mock_docbase.NewMockClient(ctrl)
-	dcbCli.EXPECT().Download("1b9c135b-61cd-4f13-8b07-6358691f782c.png").Return([]byte("hoge"), nil)
-	dcbCli.EXPECT().Download("b9dfea10-a820-45a5-bfc4-e07be2ef6588.png").Return([]byte("hoge"), nil)
+	dcbCli.EXPECT().Download("1c9c135b-61cd-4f13-8b07-6358691f782d.png").Return([]byte("hoge"), nil)
+	dcbCli.EXPECT().Download("b9dea11-a820-45b5-bfc4-e07be2ef6588.png").Return([]byte("hoge"), nil)
 
 	ghCli := mock_github.NewMockClient(ctrl)
 	ghCli.EXPECT().CreateNewPullRequest(gomock.Any()).Return(nil).Times(1)
@@ -46,11 +47,14 @@ func TestEnqueueArticleWithMock_Do(t *testing.T) {
 
 	artRepo := mock_entity.NewMockArticleRepository(ctrl)
 
+	esRepo := mock_elasticsearch.NewMockRepository(ctrl)
+
 	enqueueArticle := usecase.NewEnqueueArticle(
 		logger.NewLogger(),
 		dcbCli,
 		artRepo,
 		ghCli,
+		esRepo,
 	)
 
 	param := usecase.EnqueueArticlesInputParams{Article: article}

@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/hayashiki/lemur/config"
 	"github.com/hayashiki/lemur/docbase"
+	"github.com/hayashiki/lemur/elasticsearch"
 	"github.com/hayashiki/lemur/entity"
 	"github.com/hayashiki/lemur/event"
 	"github.com/hayashiki/lemur/event/eventtask"
@@ -14,6 +15,7 @@ import (
 	"github.com/hayashiki/lemur/usecase"
 	"log"
 	"net/http"
+	"os"
 )
 
 type server struct {
@@ -22,6 +24,7 @@ type server struct {
 	taskQueue   event.TaskQueue
 	articleRepo entity.ArticleRepository
 	githubSvc   github.Client
+	esRepo      elasticsearch.Repository
 }
 
 func (s *server) Router() http.Handler {
@@ -45,12 +48,20 @@ type Server interface {
 }
 
 func NewServer(c *config.Config) Server {
+
+	esClient, err := infra.NewESClient()
+	if err != nil {
+	}
+
+	esRepo := elasticsearch.NewRepository(esClient)
+
 	return &server{
 		logger:      logger.NewLogger(),
 		docBaseSvc:  docbase.NewClient(infra.DocBaseClient(c.DocBaseTeam, c.DocBaseToken)),
 		taskQueue:   event.NewTasksClient(c.GCPProjectID, c.GCPLocationID),
 		articleRepo: entity.NewArticleRepository(infra.GetDSClient(c.GCPProjectID)),
-		githubSvc:   github.NewClient("hayashiki", "mkdocbase", "GITHUB_SECRET_TOKEN", "hayashiki"),
+		githubSvc:   github.NewClient(c.GithubOrg, c.GithubRepo, c.GithubSecret, "hayashiki"),
+		esRepo:      esRepo,
 	}
 }
 
@@ -58,7 +69,14 @@ func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprint(w, "ok")
 }
 
-func (s *server) cronFetchDocBase(w http.ResponseWriter, _ *http.Request) {
+func (s *server) cronFetchDocBase(w http.ResponseWriter, r *http.Request) {
+
+	err := validateCron(r, os.Getenv("AUTHORIZATION"))
+
+	if err != nil {
+		return
+	}
+
 	article := usecase.NewArticles(
 		s.logger,
 		s.docBaseSvc,
@@ -67,7 +85,6 @@ func (s *server) cronFetchDocBase(w http.ResponseWriter, _ *http.Request) {
 	)
 
 	if err := article.Do(); err != nil {
-		// curryの参考にちゃんとする
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -92,9 +109,10 @@ func (s *server) enqueueArticles(w http.ResponseWriter, r *http.Request) {
 		s.docBaseSvc,
 		s.articleRepo,
 		s.githubSvc,
+		s.esRepo,
 	)
 
-	log.Printf("article %+v", article)
+	log.Printf("article %+v", article.ID)
 
 	// docBaseSvc
 	taskName := r.Header.Get("X-Appengine-Taskname")
@@ -104,11 +122,23 @@ func (s *server) enqueueArticles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//TODO: handle Queuename if need
-	//244011105321548948x
+	// eg.244011105321548948x
 	log.Printf("header X-Appengine-Queuename %+v", r.Header.Get("X-Appengine-Queuename"))
 
 	params := usecase.EnqueueArticlesInputParams{Article: article}
 	if err := enqueueArticle.Do(params); err != nil {
+		log.Printf("enqueueArticle.Do %+v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func validateCron(r *http.Request, secrets string) error {
+	if r.Header.Get("X-Appengine-Cron") == "" {
+		return fmt.Errorf("cron request does not have X-Appengine-Cron header")
+	}
+
+	if r.Header.Get("Authorization") == "secrets" {
+		return fmt.Errorf("cron request does not have Authorization header")
+	}
+	return nil
 }
